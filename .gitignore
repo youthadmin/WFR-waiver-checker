@@ -1,0 +1,40 @@
+# Secrets and auth artifacts — never commit
+.env
+.env.local
+.env.*.local
+auth_state.json
+credentials.json
+token.json
+token_send.json
+*.pem
+
+# Runtime state
+processed.json
+
+# Logs and audit trail
+logs/
+audit/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# Playwright
+playwright-report/
+test-results/
+.playwright/
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
