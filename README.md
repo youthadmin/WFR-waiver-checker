@@ -1,6 +1,6 @@
 # waiver-sync
 
-Reads the weekly Washington Square Ranch waiver email from Gmail, matches each name against attendees in two PCO Registrations signups (Youth Camp + Dream Team), and toggles the "Washington Family Ranch Form" checkbox via Playwright. Designed for GitHub Actions; local-runnable.
+Reads the weekly "WFR Waiver Form" email from Young Life's Washington Family Ranch (an XLSX of completed guest consent forms), matches each name against attendees in two PCO Registrations signups (Youth Camp + Dream Team), and toggles the "Washington Family Ranch Form" checkbox via Playwright. Designed for GitHub Actions; local-runnable.
 
 ## Architecture (hybrid, by necessity)
 

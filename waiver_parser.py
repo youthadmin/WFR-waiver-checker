@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """
-waiver_parser.py — extract a WaiverPerson list from a waiver report.
+waiver_parser.py — extract a WaiverPerson list from a guest-consent-form report.
 
-Primary input: PDF (the live WFR weekly email attaches a PDF). pdfplumber
-handles table extraction; if no tables are detected the parser falls back
-to line-by-line text extraction. If pdfplumber ever struggles with the
-actual WFR PDF format, swap in pypdf or pdfminer.six in `parse_pdf` and
-document the reason inline.
+Primary input: XLSX. Washington Family Ranch sends a weekly "WFR Waiver Form"
+email with an Excel attachment listing completed guest consent forms. The
+sheet has a "Name" column in `First [Middle Initial] Last` form, with the
+occasional parenthetical alias or double-space. Verified end-to-end against
+the 2026-05-13 live file (13/13 names matched to PCO at confidence 100).
 
-Secondary inputs (CSV, XLSX, HTML email body) are supported lightly — the
-shapes are correct but they're untested against real samples since we
-don't have any.
+Secondary input: PDF. Kept as a fallback (pdfplumber for tables, then
+line-by-line text extraction) in case Noah ever switches the attachment
+format back. If pdfplumber struggles with a real PDF, swap to pypdf or
+pdfminer.six in `parse_pdf` and document the reason inline.
+
+Tertiary inputs (CSV, HTML email body) are supported lightly — the shapes
+are correct but they're untested against real samples.
 
 Name normalization handles:
   • "First Last" and "Last, First" orderings
