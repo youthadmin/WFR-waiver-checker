@@ -45,6 +45,16 @@ PROCESSED_FILE = Path(__file__).parent / "processed.json"
 
 MAX_MESSAGES_PER_FETCH = 20
 
+# Attachment MIME types we'll pull. XLSX is the actual live format (Noah
+# sends `Mannahouse Church Completed Consent Forms_*.xlsx`); PDF is kept
+# in case the format ever switches back. Everything else (images, etc.)
+# is ignored — the WFR email typically includes a signature PNG that
+# would otherwise waste bandwidth.
+ATTACHMENT_MIMES = frozenset({
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+})
+
 
 @dataclass
 class FetchedAttachment:
@@ -123,7 +133,7 @@ def _walk_parts(parts: list, into: FetchedMessage, service, msg_id: str) -> None
         body = part.get("body", {})
 
         if filename:
-            if mime != "application/pdf":
+            if mime not in ATTACHMENT_MIMES:
                 continue
             data = _decode_body_data(body, service, msg_id)
             if data is None:
