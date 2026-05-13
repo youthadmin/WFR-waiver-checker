@@ -28,7 +28,7 @@ from typing import Optional
 
 import requests
 from dotenv import load_dotenv
-from rapidfuzz import fuzz, process
+from rapidfuzz import fuzz
 
 load_dotenv()
 
@@ -198,21 +198,34 @@ def match(
             used.add(hit.attendee_id)
             continue
 
-        # 3. Fuzzy
-        candidates = {a.attendee_id: a.full_name.lower() for a in attendees if a.attendee_id not in used}
-        if candidates:
-            best = process.extractOne(
-                wp.full_name.lower(),
-                candidates,
-                scorer=fuzz.WRatio,
-                score_cutoff=threshold,
-            )
-            if best is not None:
-                _, score, aid = best
-                hit = next(a for a in attendees if a.attendee_id == aid)
-                matches.append(Match(wp, hit, int(score), "name_fuzzy"))
-                used.add(aid)
+        # 3. Fuzzy — score each candidate against both the normalized waiver
+        # name AND the raw cell content (whitespace-collapsed, lowercased),
+        # take the higher. PCO sometimes stores a person's middle name as
+        # part of first_name (e.g. "Nicholas Caeden" / "King"); the waiver's
+        # normalized "Nicholas King" then scores below threshold (~85) but
+        # the raw "Nicholas Caeden King" lines up at 97+. Considering both
+        # forms catches that pattern without loosening the 90 floor.
+        wp_normalized = wp.full_name.lower()
+        wp_raw = " ".join((wp.raw_name or "").lower().split())
+        best_aid: Optional[str] = None
+        best_score = 0
+        for a in attendees:
+            if a.attendee_id in used:
                 continue
+            pco = a.full_name.lower()
+            score = int(max(
+                fuzz.WRatio(wp_normalized, pco),
+                fuzz.WRatio(wp_raw, pco) if wp_raw else 0,
+            ))
+            if score > best_score:
+                best_score = score
+                best_aid = a.attendee_id
+
+        if best_aid is not None and best_score >= threshold:
+            hit = next(a for a in attendees if a.attendee_id == best_aid)
+            matches.append(Match(wp, hit, best_score, "name_fuzzy"))
+            used.add(best_aid)
+            continue
 
         unmatched.append(wp)
 
