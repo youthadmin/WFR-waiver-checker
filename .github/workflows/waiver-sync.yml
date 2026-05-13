@@ -1,24 +1,22 @@
 name: WFR Waiver Sync
 
-# Schedule covers Thu 08:00–22:00 America/Los_Angeles every 30 min,
-# plus a Fri 07:00 PT catch-up. Cron in GitHub Actions runs in UTC.
+# Single weekly run: Friday 10:00 AM America/Los_Angeles.
+# Plus workflow_dispatch (below) for on-demand reruns from the Actions UI.
 #
-# PDT (UTC-7), currently in effect Mar–early Nov:
-#   Thu 08:00 PT = Thu 15:00 UTC
-#   Thu 22:00 PT = Fri 05:00 UTC
-#   Fri 07:00 PT = Fri 14:00 UTC
+# Cron in GitHub Actions runs in UTC. The line below targets 17:00 UTC,
+# which is 10:00 AM PDT (UTC-7, in effect mid-March through early November).
 #
-# DST caveat (mid-Nov to mid-Mar, PST = UTC-8): each line will fire one
-# hour earlier in local time. See HOSTING.md for the manual swap.
-#
-# Trigger this workflow on-demand via Actions → "WFR Waiver Sync" → Run.
+# DST CAVEAT: when Pacific shifts to PST (UTC-8) the first Sunday in
+# November, this cron will fire at 09:00 AM PT instead of 10:00 AM PT
+# until Pacific shifts back to PDT the second Sunday in March. To keep
+# the run at 10:00 AM PT year-round, manually swap the line at each DST
+# transition:
+#     PDT (Mar–Nov):  - cron: "0 17 * * 5"
+#     PST (Nov–Mar):  - cron: "0 18 * * 5"
 
 on:
   schedule:
-    - cron: "0,30 15-23 * * 4"   # Thu 15:00-23:30 UTC → Thu 08:00-16:30 PDT (18 fires)
-    - cron: "0,30 0-4 * * 5"     # Fri 00:00-04:30 UTC → Thu 17:00-21:30 PDT (10 fires)
-    - cron: "0 5 * * 5"          # Fri 05:00 UTC      → Thu 22:00 PDT       (1 fire)
-    - cron: "0 14 * * 5"         # Fri 14:00 UTC      → Fri 07:00 PDT catch-up (1 fire)
+    - cron: "0 17 * * 5"   # Fri 17:00 UTC → Fri 10:00 PDT (PST: swap to 18:00 UTC)
   workflow_dispatch:
     inputs:
       dry_run:

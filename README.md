@@ -123,10 +123,9 @@ Leave `DRY_RUN=true` for at least the first two scheduled runs. Inspect the summ
 ### Cron schedule
 
 Defined in `.github/workflows/waiver-sync.yml`:
-- Thursdays 08:00–22:00 America/Los_Angeles, every 30 min (29 fires)
-- Friday 07:00 America/Los_Angeles catch-up (1 fire)
+- **Fridays at 10:00 AM America/Los_Angeles** — one weekly run, the morning after Noah's Thursday email.
 
-Cron lines are in UTC. They're correct for PDT; see `HOSTING.md` for the manual swap needed during PST months (mid-Nov to mid-Mar).
+Cron line is `0 17 * * 5` (Fri 17:00 UTC = Fri 10:00 PDT). DST will shift the local fire time by an hour twice a year; see `HOSTING.md` for the manual swap recipe.
 
 ### Enable / disable the cron
 

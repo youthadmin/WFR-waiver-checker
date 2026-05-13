@@ -76,21 +76,16 @@ The bigger expiry risk isn't time, it's PCO server-side session invalidation (pa
 
 ## Cron schedule
 
-From your brief:
+Single weekly run, Friday 10:00 AM Pacific:
 
 ```yaml
 on:
   schedule:
-    # every 30 min Thursday 08:00-22:00 America/Los_Angeles (15:00-05:00 UTC next day)
-    # GH cron is UTC; PT-to-UTC offset is +7h in PDT, +8h in PST
-    - cron: '0,30 15-23 * * 4'      # Thu 15:00–23:30 UTC = 08:00–16:30 PDT
-    - cron: '0,30 0-5 * * 5'        # Fri 00:00–05:30 UTC = 17:00–22:30 PDT (still Thu local)
-    # Friday 07:00 PT catch-up = 14:00 UTC PDT, 15:00 UTC PST
-    - cron: '0 14 * * 5'
-  workflow_dispatch:                  # manual run for testing
+    - cron: "0 17 * * 5"   # Fri 17:00 UTC = Fri 10:00 PDT
+  workflow_dispatch:        # manual on-demand trigger from the Actions UI
 ```
 
-PST/PDT caveat (same as your reminder agent): when Pacific shifts to PST in early November the local hours drift by one. Address it the same way — manual cron edit twice a year, or revisit if the project lives past one DST cycle.
+PST/PDT caveat: when Pacific shifts to PST (first Sunday in November) the cron fires at 09:00 AM local instead of 10:00 AM. Manual swap to `0 18 * * 5` keeps the run at 10:00 AM PT year-round; swap back to `0 17 * * 5` when PDT resumes (second Sunday in March). Same manual-twice-a-year pattern as your other PCO agent.
 
 ## Run-summary notification — recommended path
 
