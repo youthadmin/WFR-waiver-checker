@@ -217,7 +217,13 @@ def _toggle_for_attendee(page: Page, match: Match, dry_run: bool) -> WriteResult
             before_screenshot=str(before_path) if before_path else None,
         )
 
-    checkbox.check()
+    # PCO renders each checkbox as a hidden <input> with a styled <label
+    # for="…"> overlay that intercepts pointer events. A normal click
+    # times out fighting the overlay; force=True lands the click on the
+    # input directly, and the label's `for` link still routes the
+    # state change per standard HTML semantics. Verified on the live
+    # Mayuki Corrigan registration page 2026-05-14.
+    checkbox.check(force=True)
     # Allow the PATCH to round-trip before reading state back.
     try:
         page.wait_for_load_state("networkidle", timeout=PAGE_NAVIGATION_TIMEOUT_MS)
