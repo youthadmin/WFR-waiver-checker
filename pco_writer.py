@@ -11,14 +11,19 @@ Architecture, anchored on what we confirmed against the live UI:
 
   • A single registration can contain multiple attendees (sibling groups),
     each rendered as its own per-attendee card on the page. Each card has
-    its own "Additional forms" section with its own "Washington Family
-    Ranch Form" checkbox plus a separate Medical/Liability form item that
-    we MUST NOT touch.
+    its own "Additional forms" section with its own WFR consent checkbox
+    plus a separate Medical/Liability form item that we MUST NOT touch.
+
+  • The exact label differs by signup, surfaced on 2026-05-14:
+      Youth Camp (3526683): "Washington Family Ranch Form"
+      Dream Team (3527418): "Washington Family Ranch Liability Form"
+    See WFR_CHECKBOX_NAMES. The writer tries each in order on every page
+    and uses whichever actually renders first.
 
   • To click the right checkbox, we use Playwright's filter idiom:
       page.locator("div, section, article")
           .filter(has_text=attendee.full_name)
-          .filter(has=page.get_by_role("checkbox", name=WFR_CHECKBOX_NAME))
+          .filter(has=page.get_by_role("checkbox", name=label))
           .first
     The .first picks the smallest container containing BOTH the attendee's
     name AND a WFR checkbox — that uniquely identifies the right card even
@@ -74,7 +79,18 @@ AUDIT_VIDEOS = AUDIT_DIR / "videos"
 REGISTRATION_URL_TEMPLATE = (
     "https://registrations.planningcenteronline.com/registrations/{registration_id}"
 )
-WFR_CHECKBOX_NAME = "Washington Family Ranch Form"
+
+# Both PCO signups expose the consent toggle in the "Additional forms"
+# section but use different exact labels. Tried in order — the first
+# label whose text appears on the page wins. Both are exact-string
+# matches via get_by_role("checkbox", name=…), so the Medical /
+# Student-Liability item on the Youth Camp page (full label
+# "Mannahouse Youth Camp 2026 | Attendee Medical/Student Liability
+# Form") cannot match either.
+WFR_CHECKBOX_NAMES = (
+    "Washington Family Ranch Form",            # Youth Camp signup 3526683
+    "Washington Family Ranch Liability Form",  # Dream Team signup 3527418
+)
 
 # Markers that indicate the auth state is dead and we got bounced to login.
 SESSION_DEAD_MARKERS = ("/login", "churchcenter.com", "id.planningcenteronline.com")
@@ -128,12 +144,24 @@ def _check_session_alive(page: Page) -> None:
         )
 
 
-def _attendee_card(page: Page, attendee_name: str):
+def _find_wfr_label_on_page(page: Page) -> Optional[str]:
+    """Wait briefly for either WFR label and return whichever shows up first."""
+    per_label_timeout = max(2_000, ELEMENT_WAIT_TIMEOUT_MS // len(WFR_CHECKBOX_NAMES))
+    for label in WFR_CHECKBOX_NAMES:
+        try:
+            page.wait_for_selector(f"text={label}", timeout=per_label_timeout)
+            return label
+        except PlaywrightTimeoutError:
+            continue
+    return None
+
+
+def _attendee_card(page: Page, attendee_name: str, label: str):
     """Smallest container that has BOTH the attendee's name AND a WFR checkbox."""
     return (
         page.locator("div, section, article")
         .filter(has_text=attendee_name)
-        .filter(has=page.get_by_role("checkbox", name=WFR_CHECKBOX_NAME))
+        .filter(has=page.get_by_role("checkbox", name=label))
         .first
     )
 
@@ -143,20 +171,22 @@ def _toggle_for_attendee(page: Page, match: Match, dry_run: bool) -> WriteResult
     waiver = match.waiver_person
     ts = _ts()
 
-    # Page must show at least one WFR checkbox before we go hunting for cards.
-    try:
-        page.wait_for_selector(
-            f"text={WFR_CHECKBOX_NAME}", timeout=ELEMENT_WAIT_TIMEOUT_MS
-        )
-    except PlaywrightTimeoutError:
+    # Pick whichever WFR label this page actually uses (Youth Camp vs Dream
+    # Team have different labels). Returns None if neither renders within
+    # the wait budget.
+    label = _find_wfr_label_on_page(page)
+    if label is None:
         return WriteResult(
             waiver, attendee, action="failed",
             confidence=match.confidence, method=match.method,
-            error=f"WFR checkbox text never rendered within {ELEMENT_WAIT_TIMEOUT_MS}ms",
+            error=(
+                f"No WFR checkbox label rendered within {ELEMENT_WAIT_TIMEOUT_MS}ms "
+                f"(tried: {', '.join(repr(n) for n in WFR_CHECKBOX_NAMES)})"
+            ),
         )
 
-    card = _attendee_card(page, attendee.full_name)
-    checkbox = card.get_by_role("checkbox", name=WFR_CHECKBOX_NAME).first
+    card = _attendee_card(page, attendee.full_name, label)
+    checkbox = card.get_by_role("checkbox", name=label).first
 
     try:
         is_checked = checkbox.is_checked(timeout=ELEMENT_WAIT_TIMEOUT_MS)
