@@ -59,7 +59,7 @@ jobs:
       NOTIFY_EMAIL:   "youthadmin@mannahouse.church"
 
       MATCH_THRESHOLD:        "90"
-      MAX_ATTENDEES_PER_RUN:  "50"
+      MAX_ATTENDEES_PER_RUN:  "500"
       RUN_TIMEOUT_MINUTES:    "20"
 
     steps:
