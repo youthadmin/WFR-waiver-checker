@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+  Offline replica of a PCO registration page holding TWO attendees, copied
+  from the live structure of Youth Camp registration 83840005 on 2026-07-30:
+
+    • per-attendee card (div.pane.attendee-status) with the name as its heading
+    • an "Additional forms" list per card holding the Medical/Liability item
+      AND the WFR item — only the WFR one may ever be touched
+    • checkbox ids of the form {form_id}-{attendee_id}-{ordinal}
+    • the real input is opacity:0 and the styled <label> sits on top of it,
+      which is why pco_writer clicks with force=True
+    • Destiny's card renders FIRST even though Daniel is listed first in the
+      signup's attendee table — page order carries no meaning
+
+  Used by test_writer_offline.py.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Registrations</title>
+<style>
+  body { font-family: sans-serif; background: #12212f; color: #e8eef4; }
+  .pane { border: 1px solid #33475b; border-radius: 6px; padding: 16px; margin: 16px 0; }
+  ul.unstyled { list-style: none; padding: 0; }
+  li.form-item { display: flex; align-items: center; margin-bottom: 8px; position: relative; }
+  input.checkbox { opacity: 0; position: absolute; width: 16px; height: 16px; }
+  label.checkbox-label { padding-left: 24px; position: relative; cursor: pointer; }
+  label.checkbox-label::before {
+    content: ""; position: absolute; left: 0; top: 1px;
+    width: 16px; height: 16px; border: 1px solid #7d95ad; border-radius: 3px; background: #1d3348;
+  }
+</style>
+</head>
+<body>
+  <header><h1>Mannahouse Youth Camp 2026</h1></header>
+  <div id="registration">
+    <h2>Attendees</h2>
+
+    <div class="pane mt-4 mb-1 print-box attendee-status">
+      <h3>Destiny Chukwunyekwam</h3>
+      <p>Middle School Student</p>
+      <p>($410)</p>
+      <p>Incomplete</p>
+      <button data-modal-url="/attendees/159570963/edit">Edit</button>
+      <h4>Additional forms</h4>
+      <ul class="unstyled mb-0">
+        <li class="form-item">
+          <input type="checkbox" class="checkbox" id="390751-159570963-0">
+          <label class="checkbox-label" for="390751-159570963-0">Mannahouse Youth Camp 2026 | Attendee Medical/Student Liability Form</label>
+        </li>
+        <li class="form-item">
+          <input type="checkbox" class="checkbox" id="388414-159570963-1">
+          <label class="checkbox-label" for="388414-159570963-1">Washington Family Ranch Form</label>
+        </li>
+      </ul>
+    </div>
+
+    <div class="pane mt-4 mb-1 print-box attendee-status">
+      <h3>Daniel Chukwunyekwam</h3>
+      <p>Middle School Student</p>
+      <p>($410)</p>
+      <p>Incomplete</p>
+      <button data-modal-url="/attendees/159570964/edit">Edit</button>
+      <h4>Additional forms</h4>
+      <ul class="unstyled mb-0">
+        <li class="form-item">
+          <input type="checkbox" class="checkbox" id="390751-159570964-0" checked>
+          <label class="checkbox-label" for="390751-159570964-0">Mannahouse Youth Camp 2026 | Attendee Medical/Student Liability Form</label>
+        </li>
+        <li class="form-item">
+          <input type="checkbox" class="checkbox" id="388414-159570964-1">
+          <label class="checkbox-label" for="388414-159570964-1">Washington Family Ranch Form</label>
+        </li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

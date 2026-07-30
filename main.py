@@ -203,9 +203,17 @@ def _format_summary(s: RunSummary) -> tuple[str, str]:
 
     def _wr_line(r: pco_writer.WriteResult) -> str:
         sig = "YC" if r.attendee.signup_id == SIGNUP_YOUTH_CAMP else "DT"
+        # Flag family registrations and any time we had to fall back off the
+        # attendee-id anchor to find the right person's checkbox.
+        notes = []
+        if r.attendees_on_page > 1:
+            notes.append(f"{r.attendees_on_page}-person reg")
+        if r.target_method and r.target_method != "attendee_id":
+            notes.append(f"located via {r.target_method}")
+        suffix = f"  ({'; '.join(notes)})" if notes else ""
         return (
             f"  • {r.attendee.full_name:<28} [{sig}]  "
-            f"conf={r.confidence:>3} {r.method}"
+            f"conf={r.confidence:>3} {r.method}{suffix}"
         )
 
     _section(
